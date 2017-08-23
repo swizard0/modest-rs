@@ -1,0 +1,11 @@
+[package]
+name = "modest"
+description = "Modest wrapper for Rust (https://github.com/lexborisov/Modest)"
+version = "0.1.0"
+license = "LGPL"
+authors = ["Alexey Voznyuk <me@swizard.info>"]
+categories = ["external-ffi-bindings"]
+links = "modest"
+
+[dependencies]
+modest_sys = { version = "0.1", path = "./modest_sys" }

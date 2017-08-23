@@ -1,0 +1,15 @@
+[package]
+name = "modest_sys"
+description = "Modest bindgen wrapper for Rust (https://github.com/lexborisov/Modest)"
+version = "0.1.0"
+license = "LGPL"
+authors = ["Alexey Voznyuk <me@swizard.info>"]
+categories = ["external-ffi-bindings"]
+links = "modest"
+
+build = "build.rs"
+
+[build-dependencies]
+gcc = "0.3.10"
+
+[dependencies]
