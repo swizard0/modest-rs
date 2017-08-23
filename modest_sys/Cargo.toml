@@ -5,7 +5,6 @@ version = "0.1.0"
 license = "LGPL"
 authors = ["Alexey Voznyuk <me@swizard.info>"]
 categories = ["external-ffi-bindings"]
-links = "modest"
 
 build = "build.rs"
 
