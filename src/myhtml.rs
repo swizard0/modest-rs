@@ -17,10 +17,16 @@ pub struct Myhtml {
     raw: *mut ffi::myhtml_t,
 }
 
+pub struct Tree<'a> {
+    raw: *mut ffi::myhtml_tree_t,
+    myhtml: &'a mut Myhtml,
+}
+
 #[derive(Debug)]
 pub enum Error {
     NoMemory,
-    Init,
+    InitMyhtml,
+    InitMyhtmlTree
 }
 
 impl Myhtml {
@@ -44,7 +50,27 @@ impl Myhtml {
             };
 
             if unsafe { ffi::myhtml_init(obj.raw, opts, thread_count, queue_size) } != 0 {
-                Err(Error::Init)
+                Err(Error::InitMyhtml)
+            } else {
+                Ok(obj)
+            }
+        }
+    }
+}
+
+impl<'a> Tree<'a> {
+    pub fn new(myhtml: &'a mut Myhtml) -> Result<Tree<'a>, Error> {
+        let raw = unsafe { ffi::myhtml_tree_create() };
+        if raw.is_null() {
+            Err(Error::NoMemory)
+        } else {
+            let obj = Tree {
+                raw: raw,
+                myhtml: myhtml,
+            };
+
+            if unsafe { ffi::myhtml_tree_init(obj.raw, obj.myhtml.raw) } != 0 {
+                Err(Error::InitMyhtmlTree)
             } else {
                 Ok(obj)
             }
@@ -56,6 +82,14 @@ impl Drop for Myhtml {
     fn drop(&mut self) {
         assert!(!self.raw.is_null());
         let free_result = unsafe { ffi::myhtml_destroy(self.raw) };
+        assert!(free_result.is_null());
+    }
+}
+
+impl<'a> Drop for Tree<'a> {
+    fn drop(&mut self) {
+        assert!(!self.raw.is_null());
+        let free_result = unsafe { ffi::myhtml_tree_destroy(self.raw) };
         assert!(free_result.is_null());
     }
 }
@@ -73,5 +107,11 @@ mod tests {
     #[test]
     fn myhtml_make_destroy() {
         let _myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
+    }
+
+    #[test]
+    fn myhtml_tree_make_destroy() {
+        let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
+        let _tree = Tree::new(&mut myhtml).unwrap();
     }
 }
