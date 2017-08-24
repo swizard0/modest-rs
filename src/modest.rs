@@ -7,6 +7,7 @@ pub struct Modest {
 #[derive(Debug)]
 pub enum Error {
     NoMemory,
+    Init,
 }
 
 impl Modest {
@@ -15,9 +16,14 @@ impl Modest {
         if raw.is_null() {
             Err(Error::NoMemory)
         } else {
-            Ok(Modest {
+            let obj = Modest {
                 raw: raw,
-            })
+            };
+            if unsafe { ffi::modest_init(obj.raw) } != 0 {
+                Err(Error::Init)
+            } else {
+                Ok(obj)
+            }
         }
     }
 }
@@ -40,6 +46,7 @@ pub mod finder {
     #[derive(Debug)]
     pub enum Error {
         NoMemory,
+        Init,
     }
 
     impl Finder {
@@ -48,9 +55,14 @@ pub mod finder {
             if raw.is_null() {
                 Err(Error::NoMemory)
             } else {
-                Ok(Finder {
+                let obj = Finder {
                     raw: raw,
-                })
+                };
+                if unsafe { ffi::modest_finder_init(obj.raw) } != 0 {
+                    Err(Error::Init)
+                } else {
+                    Ok(obj)
+                }
             }
         }
 
@@ -87,6 +99,11 @@ mod tests {
 
     #[test]
     fn modest_finder_make_destroy() {
+        let _finder = finder::Finder::new().unwrap();
+    }
+
+    #[test]
+    fn modest_finder_make_destroy_simple() {
         let _finder = finder::Finder::simple().unwrap();
     }
 }
