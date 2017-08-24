@@ -1,6 +1,8 @@
-use modest_sys::mycss as ffi;
+use modest_sys::mycss::entry as ffi;
 
 use super::Mycss;
+
+pub mod selectors;
 
 pub struct Entry<'a> {
     raw: *mut ffi::mycss_entry_t,
@@ -24,7 +26,7 @@ impl<'a> Entry<'a> {
                 mycss: mycss,
             };
 
-            if unsafe { ffi::mycss_entry_init(obj.mycss.raw, obj.raw) } != 0 {
+            if unsafe { ffi::mycss_entry_init(obj.mycss.raw as *mut ffi::mycss_t, obj.raw) } != 0 {
                 Err(Error::Init)
             } else {
                 Ok(obj)
