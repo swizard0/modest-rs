@@ -1,6 +1,7 @@
 use modest_sys::myhtml as ffi;
 
-use super::{encoding, Myhtml};
+use super::Myhtml;
+use super::super::encoding;
 
 pub struct Tree<'a> {
     raw: *mut ffi::myhtml_tree_t,

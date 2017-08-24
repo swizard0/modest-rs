@@ -1,8 +1,5 @@
 use modest_sys::myhtml as ffi;
 
-mod encoding;
-pub use self::encoding::Encoding;
-
 pub mod tree;
 
 #[derive(Clone, Copy, Default, Debug)]
