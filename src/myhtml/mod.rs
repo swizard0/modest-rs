@@ -1,5 +1,8 @@
 use modest_sys::myhtml as ffi;
 
+mod encoding;
+pub use self::encoding::Encoding;
+
 #[derive(Clone, Copy, Default, Debug)]
 pub struct InitOptions {
     parse_mode: ParseMode,
@@ -26,7 +29,8 @@ pub struct Tree<'a> {
 pub enum Error {
     NoMemory,
     InitMyhtml,
-    InitMyhtmlTree
+    InitMyhtmlTree,
+    Parse,
 }
 
 impl Myhtml {
@@ -76,6 +80,21 @@ impl<'a> Tree<'a> {
             }
         }
     }
+
+    pub fn parse(&mut self, html: &str, encoding: encoding::Encoding) -> Result<(), Error> {
+        let status = unsafe {
+            ffi::myhtml_parse(
+                self.raw,
+                encoding.to_ffi(),
+                html.as_ptr() as *const ::std::os::raw::c_char,
+                html.len())
+        };
+        if status != 0 {
+            Err(Error::Parse)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 impl Drop for Myhtml {
@@ -104,6 +123,10 @@ impl Default for ParseMode {
 mod tests {
     use super::*;
 
+    fn sample_html() -> &'static str {
+        "<div><p id=p1><p id=p2><p id=p3><a>link</a><p id=p4><p id=p5><p id=p6></div>"
+    }
+
     #[test]
     fn myhtml_make_destroy() {
         let _myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
@@ -113,5 +136,12 @@ mod tests {
     fn myhtml_tree_make_destroy() {
         let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
         let _tree = Tree::new(&mut myhtml).unwrap();
+    }
+
+    #[test]
+    fn myhtml_parse() {
+        let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
+        let mut tree = Tree::new(&mut myhtml).unwrap();
+        tree.parse(sample_html(), Default::default()).unwrap();
     }
 }
