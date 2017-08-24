@@ -1,5 +1,7 @@
 use modest_sys::mycss as ffi;
 
+pub mod entry;
+
 pub struct Mycss {
     raw: *mut ffi::mycss_t,
 }
