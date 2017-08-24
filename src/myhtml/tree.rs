@@ -8,6 +8,16 @@ pub struct Tree<'a> {
     myhtml: &'a Myhtml,
 }
 
+pub struct ParsedTree<'a> {
+    raw: *mut ffi::myhtml_tree_t,
+    _myhtml: &'a Myhtml,
+}
+
+pub struct Node<'n, 't: 'n> {
+    raw: *mut ffi::myhtml_tree_node_t,
+    tree: &'n ParsedTree<'t>,
+}
+
 #[derive(Debug)]
 pub enum Error {
     NoMemory,
@@ -15,8 +25,8 @@ pub enum Error {
     Parse,
 }
 
-impl<'a> Tree<'a> {
-    pub fn new(myhtml: &'a mut Myhtml) -> Result<Tree<'a>, Error> {
+impl<'htm> Tree<'htm> {
+    pub fn new(myhtml: &'htm mut Myhtml) -> Result<Tree<'htm>, Error> {
         let raw = unsafe { ffi::myhtml_tree_create() };
         if raw.is_null() {
             Err(Error::NoMemory)
@@ -34,7 +44,7 @@ impl<'a> Tree<'a> {
         }
     }
 
-    pub fn parse(&mut self, html: &str, encoding: encoding::Encoding) -> Result<(), Error> {
+    pub fn parse(self, html: &str, encoding: encoding::Encoding) -> Result<ParsedTree<'htm>, Error> {
         let status = unsafe {
             ffi::myhtml_parse(
                 self.raw,
@@ -45,12 +55,54 @@ impl<'a> Tree<'a> {
         if status != 0 {
             Err(Error::Parse)
         } else {
-            Ok(())
+            let parsed_tree = ParsedTree {
+                raw: self.raw,
+                _myhtml: self.myhtml,
+            };
+            ::std::mem::forget(self);
+            Ok(parsed_tree)
+        }
+    }
+}
+
+impl<'htm> ParsedTree<'htm> {
+    pub fn document<'t>(&'t self) -> Option<Node<'t, 'htm>> {
+        self.maybe_make_node(unsafe { ffi::myhtml_tree_get_document(self.raw) })
+    }
+
+    pub fn node_html<'t>(&'t self) -> Option<Node<'t, 'htm>> {
+        self.maybe_make_node(unsafe { ffi::myhtml_tree_get_node_html(self.raw) })
+    }
+
+    pub fn node_head<'t>(&'t self) -> Option<Node<'t, 'htm>> {
+        self.maybe_make_node(unsafe { ffi::myhtml_tree_get_node_head(self.raw) })
+    }
+
+    pub fn node_body<'t>(&'t self) -> Option<Node<'t, 'htm>> {
+        self.maybe_make_node(unsafe { ffi::myhtml_tree_get_node_body(self.raw) })
+    }
+
+    fn maybe_make_node<'t>(&'t self, raw_node: *mut ffi::myhtml_tree_node_t) -> Option<Node<'t, 'htm>> {
+        if raw_node.is_null() {
+            None
+        } else {
+            Some(Node {
+                raw: raw_node,
+                tree: self,
+            })
         }
     }
 }
 
 impl<'a> Drop for Tree<'a> {
+    fn drop(&mut self) {
+        assert!(!self.raw.is_null());
+        let free_result = unsafe { ffi::myhtml_tree_destroy(self.raw) };
+        assert!(free_result.is_null());
+    }
+}
+
+impl<'a> Drop for ParsedTree<'a> {
     fn drop(&mut self) {
         assert!(!self.raw.is_null());
         let free_result = unsafe { ffi::myhtml_tree_destroy(self.raw) };
@@ -76,6 +128,10 @@ mod tests {
     fn myhtml_parse() {
         let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
         let mut tree = Tree::new(&mut myhtml).unwrap();
-        tree.parse(sample_html(), Default::default()).unwrap();
+        let parsed_tree = tree.parse(sample_html(), Default::default()).unwrap();
+        assert!(parsed_tree.document().is_some());
+        assert!(parsed_tree.node_html().is_some());
+        assert!(parsed_tree.node_head().is_some());
+        assert!(parsed_tree.node_body().is_some());
     }
 }
