@@ -26,7 +26,6 @@ pub struct Myhtml {
 pub enum Error {
     NoMemory,
     Init,
-    Parse,
 }
 
 impl Myhtml {

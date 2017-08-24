@@ -2,10 +2,4 @@
 
 pub mod modest;
 pub mod myhtml;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+pub mod mycss;
