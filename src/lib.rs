@@ -10,3 +10,7 @@ pub use self::encoding::Encoding;
 trait ForeignRaw<T> {
     fn get_raw(&mut self) -> *mut T;
 }
+
+trait FromRaw<T> {
+    fn from_raw(ptr: *mut T) -> Self;
+}

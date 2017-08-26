@@ -1,6 +1,7 @@
 use modest_sys::myhtml as ffi;
 
 pub mod tree;
+pub mod collection;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct InitOptions {
