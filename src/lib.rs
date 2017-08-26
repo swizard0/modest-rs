@@ -6,3 +6,7 @@ pub mod mycss;
 
 pub mod encoding;
 pub use self::encoding::Encoding;
+
+trait ForeignRaw<T> {
+    fn get_raw(&mut self) -> *mut T;
+}

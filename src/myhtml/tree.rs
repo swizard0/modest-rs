@@ -1,7 +1,7 @@
 use modest_sys::myhtml as ffi;
 
 use super::Myhtml;
-use super::super::encoding;
+use super::super::{encoding, ForeignRaw};
 
 pub struct Tree<'a> {
     raw: *mut ffi::myhtml_tree_t,
@@ -109,6 +109,12 @@ impl<'n, 't> Node<'n, 't> {
             ::std::str::from_utf8_unchecked(
                 ::std::slice::from_raw_parts(c_buf as *const u8, c_len))
         }
+    }
+}
+
+impl<'n, 't> ForeignRaw<ffi::myhtml_tree_node_t> for Node<'n, 't> {
+    fn get_raw(&mut self) -> *mut ffi::myhtml_tree_node_t {
+        self.raw
     }
 }
 

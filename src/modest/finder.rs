@@ -1,4 +1,5 @@
 use modest_sys::modest::finder as ffi;
+use super::super::ForeignRaw;
 
 pub struct Finder {
     raw: *mut ffi::modest_finder_t,
@@ -44,6 +45,12 @@ impl Drop for Finder {
         assert!(!self.raw.is_null());
         let free_result = unsafe { ffi::modest_finder_destroy(self.raw, true) };
         assert!(free_result.is_null());
+    }
+}
+
+impl ForeignRaw<ffi::modest_finder_t> for Finder {
+    fn get_raw(&mut self) -> *mut ffi::modest_finder_t {
+        self.raw
     }
 }
 
