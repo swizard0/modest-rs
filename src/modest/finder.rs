@@ -49,7 +49,11 @@ impl Drop for Finder {
 }
 
 impl ForeignRaw<ffi::modest_finder_t> for Finder {
-    fn get_raw(&mut self) -> *mut ffi::modest_finder_t {
+    fn get_raw_mut (&mut self) -> *mut ffi::modest_finder_t {
+        self.raw
+    }
+
+    fn get_raw (&self) -> *const ffi::modest_finder_t {
         self.raw
     }
 }

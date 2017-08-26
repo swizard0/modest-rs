@@ -19,6 +19,8 @@ enum Error {
     MycssEntryCreate(mycss::entry::Error),
     MycssParse(mycss::entry::selectors::Error),
     Finder(modest_mod::finder::Error),
+    NoHtmlTag,
+    SelectorsListFind(mycss::entry::selectors::Error),
 }
 
 fn run(html: &str, selector: &str) -> Result<(), Error> {
@@ -35,8 +37,12 @@ fn run(html: &str, selector: &str) -> Result<(), Error> {
     let mut selectors = mycss::entry::selectors::Selectors::new(&mut entry);
     let selectors_list = selectors.parse(selector, Default::default())
         .map_err(Error::MycssParse)?;
-    let finder = modest_mod::finder::Finder::new()
+    let mut finder = modest_mod::finder::Finder::new()
         .map_err(Error::Finder)?;
-
+    let collection = selectors_list.find(&parsed_html_tree.node_html().ok_or(Error::NoHtmlTag)?, &mut finder)
+        .map_err(Error::SelectorsListFind)?;
+    for node in collection.iter() {
+        println!("Node found: <{}>", node.name());
+    }
     Ok(())
 }

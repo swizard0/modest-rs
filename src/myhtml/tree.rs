@@ -1,7 +1,7 @@
 use modest_sys::myhtml as ffi;
 
 use super::Myhtml;
-use super::super::{encoding, ForeignRaw};
+use super::super::{encoding, ForeignRaw, FromRaw};
 
 pub struct Tree<'a> {
     raw: *mut ffi::myhtml_tree_t,
@@ -86,10 +86,7 @@ impl<'htm> ParsedTree<'htm> {
         if raw_node.is_null() {
             None
         } else {
-            Some(Node {
-                raw: raw_node,
-                tree: self,
-            })
+            Some(FromRaw::from_raw((raw_node, self)))
         }
     }
 }
@@ -97,6 +94,10 @@ impl<'htm> ParsedTree<'htm> {
 pub type TagId = ffi::myhtml_tag_id_t;
 
 impl<'n, 't> Node<'n, 't> {
+    pub fn owner(&self) -> &'n ParsedTree<'t> {
+        self.tree
+    }
+
     pub fn tag_id(&self) -> TagId {
         unsafe { ffi::myhtml_node_tag_id(self.raw) }
     }
@@ -113,8 +114,21 @@ impl<'n, 't> Node<'n, 't> {
 }
 
 impl<'n, 't> ForeignRaw<ffi::myhtml_tree_node_t> for Node<'n, 't> {
-    fn get_raw(&mut self) -> *mut ffi::myhtml_tree_node_t {
+    fn get_raw_mut(&mut self) -> *mut ffi::myhtml_tree_node_t {
         self.raw
+    }
+
+    fn get_raw(&self) -> *const ffi::myhtml_tree_node_t {
+        self.raw
+    }
+}
+
+impl<'n, 't> FromRaw<(*mut ffi::myhtml_tree_node_t, &'n ParsedTree<'t>)> for Node<'n, 't> {
+    fn from_raw(init: (*mut ffi::myhtml_tree_node_t, &'n ParsedTree<'t>)) -> Self {
+        Node {
+            raw: init.0,
+            tree: init.1,
+        }
     }
 }
 

@@ -106,18 +106,18 @@ impl<'e, 'css> Selectors<'e, 'css> {
 }
 
 impl<'l, 'e, 'css> SelectorsList<'l, 'e, 'css> {
-    pub fn find<'t, 'htm>(&self, node: &mut Node<'t, 'htm>, finder: &mut Finder) -> Result<Collection, Error> {
+    pub fn find<'t, 'htm>(&self, node: &Node<'t, 'htm>, finder: &mut Finder) -> Result<Collection<'t, 'htm>, Error> {
         let mut collection = ::std::ptr::null_mut();
         let status = unsafe {
             finder_ffi::modest_finder_by_selectors_list(
-                finder.get_raw(),
+                finder.get_raw_mut(),
                 node.get_raw() as *mut finder_ffi::myhtml_tree_node,
                 self.raw as *mut finder_ffi::mycss_selectors_list,
                 &mut collection)
         };
         if status == 0 {
             assert!(!collection.is_null());
-            Ok(FromRaw::from_raw(collection as *mut myhtml_ffi::myhtml_collection_t))
+            Ok(FromRaw::from_raw((collection as *mut myhtml_ffi::myhtml_collection_t, node.owner())))
         } else {
             Err(Error::Find)
         }
