@@ -42,7 +42,8 @@ fn run(html: &str, selector: &str) -> Result<(), Error> {
     let collection = selectors_list.find(&parsed_html_tree.node_html().ok_or(Error::NoHtmlTag)?, &mut finder)
         .map_err(Error::SelectorsListFind)?;
     for node in collection.iter() {
-        println!("Node found: <{}>", node.name());
+        let coords = node.element_coords();
+        println!("Node found: <{}>, element: {}", node.name(), &html[coords.0 .. coords.0 + coords.1]);
     }
     Ok(())
 }

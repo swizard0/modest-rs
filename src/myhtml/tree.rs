@@ -111,6 +111,20 @@ impl<'n, 't> Node<'n, 't> {
                 ::std::slice::from_raw_parts(c_buf as *const u8, c_len))
         }
     }
+
+    pub fn raw_coords(&self) -> (usize, usize) {
+        unsafe {
+            let pos = ffi::myhtml_node_raw_pasition(self.raw);
+            (pos.begin, pos.length)
+        }
+    }
+
+    pub fn element_coords(&self) -> (usize, usize) {
+        unsafe {
+            let pos = ffi::myhtml_node_element_pasition(self.raw);
+            (pos.begin, pos.length)
+        }
+    }
 }
 
 impl<'n, 't> ForeignRaw<ffi::myhtml_tree_node_t> for Node<'n, 't> {
