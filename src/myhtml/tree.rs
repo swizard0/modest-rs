@@ -94,6 +94,24 @@ impl<'htm> ParsedTree<'htm> {
     }
 }
 
+pub type TagId = ffi::myhtml_tag_id_t;
+
+impl<'n, 't> Node<'n, 't> {
+    pub fn tag_id(&self) -> TagId {
+        unsafe { ffi::myhtml_node_tag_id(self.raw) }
+    }
+
+    pub fn name(&self) -> &str {
+        let tag_id = self.tag_id();
+        let mut c_len = 0;
+        let c_buf = unsafe { ffi::myhtml_tag_name_by_id(self.tree.raw, tag_id, &mut c_len) };
+        unsafe {
+            ::std::str::from_utf8_unchecked(
+                ::std::slice::from_raw_parts(c_buf as *const u8, c_len))
+        }
+    }
+}
+
 impl<'a> Drop for Tree<'a> {
     fn drop(&mut self) {
         assert!(!self.raw.is_null());
@@ -127,11 +145,22 @@ mod tests {
     #[test]
     fn myhtml_parse() {
         let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
-        let mut tree = Tree::new(&mut myhtml).unwrap();
+        let tree = Tree::new(&mut myhtml).unwrap();
         let parsed_tree = tree.parse(sample_html(), Default::default()).unwrap();
         assert!(parsed_tree.document().is_some());
         assert!(parsed_tree.node_html().is_some());
         assert!(parsed_tree.node_head().is_some());
         assert!(parsed_tree.node_body().is_some());
     }
+
+    #[test]
+    fn tag_names() {
+        let mut myhtml = Myhtml::new(Default::default(), 1, 0).unwrap();
+        let tree = Tree::new(&mut myhtml).unwrap();
+        let parsed_tree = tree.parse(sample_html(), Default::default()).unwrap();
+        assert_eq!(parsed_tree.node_html().unwrap().name(), "html");
+        assert_eq!(parsed_tree.node_head().unwrap().name(), "head");
+        assert_eq!(parsed_tree.node_body().unwrap().name(), "body");
+    }
+
 }
