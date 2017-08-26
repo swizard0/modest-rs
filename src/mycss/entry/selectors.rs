@@ -3,11 +3,13 @@ use std::{str, slice};
 use modest_sys::mycss::entry as entry_ffi;
 use modest_sys::mycss::selectors as selectors_ffi;
 use modest_sys::modest::finder as finder_ffi;
+use modest_sys::myhtml as myhtml_ffi;
 
 use super::Entry;
-use super::super::super::{Encoding, ForeignRaw};
+use super::super::super::{Encoding, ForeignRaw, FromRaw};
 use super::super::super::modest::finder::Finder;
 use super::super::super::myhtml::tree::Node;
+use super::super::super::myhtml::collection::Collection;
 
 pub struct Selectors<'e, 'css: 'e> {
     raw: *mut selectors_ffi::mycss_selectors_t,
@@ -104,7 +106,7 @@ impl<'e, 'css> Selectors<'e, 'css> {
 }
 
 impl<'l, 'e, 'css> SelectorsList<'l, 'e, 'css> {
-    pub fn find<'t, 'htm>(&self, node: &mut Node<'t, 'htm>, finder: &mut Finder) -> Result<(), Error> {
+    pub fn find<'t, 'htm>(&self, node: &mut Node<'t, 'htm>, finder: &mut Finder) -> Result<Collection, Error> {
         let mut collection = ::std::ptr::null_mut();
         let status = unsafe {
             finder_ffi::modest_finder_by_selectors_list(
@@ -114,7 +116,8 @@ impl<'l, 'e, 'css> SelectorsList<'l, 'e, 'css> {
                 &mut collection)
         };
         if status == 0 {
-            Ok(())
+            assert!(!collection.is_null());
+            Ok(FromRaw::from_raw(collection as *mut myhtml_ffi::myhtml_collection_t))
         } else {
             Err(Error::Find)
         }

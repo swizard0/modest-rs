@@ -12,3 +12,11 @@ impl FromRaw<ffi::myhtml_collection_t> for Collection {
         }
     }
 }
+
+impl Drop for Collection {
+    fn drop(&mut self) {
+        assert!(!self.raw.is_null());
+        let free_result = unsafe { ffi::myhtml_collection_destroy(self.raw) };
+        assert!(free_result.is_null());
+    }
+}
